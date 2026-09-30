@@ -2,25 +2,19 @@ package org.example;
 
 import serpapi.*;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ScrapeAutocomplete {
 
     public static void main(String[] args) throws Exception {
-        List<String> suggestions = findTools();
-
-        System.out.println("Autocomplete suggestions:");
-        for (String suggestion : suggestions) {
-            System.out.println("* " + suggestion);
-        }
+        findTools();
     }
 
-    // Asks Google for autocomplete suggestions and returns them as a list
-    public static List<String> findTools() throws Exception {
+    // Asks Google for autocomplete suggestions and prints them out
+    public static void findTools() throws Exception {
 
         // Set up the SerpApi client with your key
         String apiKey = System.getenv("SERPAPI_KEY");
@@ -35,19 +29,24 @@ public class ScrapeAutocomplete {
         Map<String, String> searchTerms = new HashMap<>();
         searchTerms.put("q", "software engineers are using ");
 
-        JsonObject response = client.search(searchTerms);
+        try {
+            JsonObject response = client.search(searchTerms);
 
-        // Pull the suggestions out of the response
-        JsonArray suggestionsFromApi = response.getAsJsonArray("suggestions");
+            // Pull the suggestions out of the response
+            JsonArray suggestions = response.getAsJsonArray("suggestions");
 
-        // Copy each suggestion's text into a simple list of Strings
-        List<String> results = new ArrayList<>();
-        for (int i = 0; i < suggestionsFromApi.size(); i++) {
-            JsonObject item = suggestionsFromApi.get(i).getAsJsonObject();
-            String text = item.get("value").getAsString();
-            results.add(text);
+            // Print each suggestion's text
+            System.out.println("Autocomplete suggestions for \"software engineers are using...\":");
+            for (JsonElement element : suggestions) {
+                   JsonObject obj = element.getAsJsonObject();
+                   if (obj.has("value")) {
+                       System.out.println("* " + obj.get("value").getAsString());
+                   }
+            }
+        } catch (SerpApiException ex) {
+            System.out.println("Exception:");
+            System.out.println(ex.toString());
         }
-
-        return results;
+        
     }
 }
